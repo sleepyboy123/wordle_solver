@@ -17,8 +17,10 @@ else:
 word = ["", "", "", "", ""]
 wrong_position = {}
 unused_letters = set()
+# possible_word_list is a filtered word list based on new knowledge
+possible_word_list = word_list
 
-# Function to check if a worst is valid based on current information
+# Function to check if a word is valid based on current information
 def check_word(possible_word):
     # Perform a letter by letter check
     for a in range(len(possible_word)):
@@ -68,13 +70,13 @@ while "" in word:
     # Fetch possible answers for next guess
     possible_next_guess = []
 
-    for possible_word in word_list:
+    for possible_word in possible_word_list:
         upper_possible_word = possible_word.upper()
         if check_word(upper_possible_word):
             possible_next_guess.append(upper_possible_word)
 
     # Reduce the total word list based on what we have filtered
-    word_list = possible_next_guess
+    possible_word_list = possible_next_guess
 
     # Find the most common letters and use that to calculate a weightage
     most_common_letters = Counter(c for w in possible_next_guess for c in w if c.isalpha())
@@ -88,10 +90,36 @@ while "" in word:
 
     weighted_possible_next_guess = sorted(weighted_possible_next_guess, key=lambda x: x["score"], reverse=True)
 
-    print(weighted_possible_next_guess)
+    # Greedy Algorithm
+    # Find all the unused letters that are possible solutions
+    greedy_letters = set()
+    for w in weighted_possible_next_guess:
+        for l in w["word"]:
+             # Check if the letter is totally not in use
+             if l not in unused_letters and l not in word and not wrong_position.get(l):
+                 greedy_letters.add(l)
+
+    # Calculate the greedy weighted possible next guesses
+    greedy_weighted_possible_next_guess = []
+    for w in word_list:
+        score = 0
+        set_word = set(w.upper())
+        for l in set_word:
+            if l in greedy_letters:
+                score += 1
+        if score != 0:
+            possible_word = {"word": w.upper(), "score": score}
+            greedy_weighted_possible_next_guess.append(possible_word)
+
+    greedy_weighted_possible_next_guess = sorted(greedy_weighted_possible_next_guess, key=lambda x: x["score"], reverse=True)           
+
+
+    print("weighted_possible_next_guess", weighted_possible_next_guess)
     print(len(weighted_possible_next_guess))
+    print("greedy_letters", greedy_letters)
+    print("greedy_weighted_possible_next_guess", greedy_weighted_possible_next_guess[:5])
     print("most_common_letters", most_common_letters)
-    print("unused_letters ", unused_letters)
+    print("unused_letters", unused_letters)
     print("word", word)
     print("wrong_position", wrong_position)
     print("\n")
